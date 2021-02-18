@@ -2,11 +2,13 @@
 
 Small and handy Android applications.
 
-### Current
+### Apps
 
-- Notification listener
+- Notification Listener
 
 ### Todo
 
-- File transfer
-- Step counter
+- File Transfer
+- Step Counter
+- Password Manager
+- Simple Cryptography

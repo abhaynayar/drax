@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.ScrollView;
 
 // TODO: Battery optimization jump to package name.
+// TODO: Add date and time to notification logs.
 
 public class MainActivity extends AppCompatActivity {
 
