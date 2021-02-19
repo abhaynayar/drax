@@ -8,8 +8,12 @@ Small and handy Android applications.
 
 ### Todo
 
+- Clipboard Share
 - Text Editor
 - File Transfer
 - Step Counter
 - Password Manager
 - Simple Cryptography
+- World Clock
+- Weather App
+- 4chan Browser
