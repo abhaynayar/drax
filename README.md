@@ -8,6 +8,7 @@ Small and handy Android applications.
 
 ### Todo
 
+- Text Editor
 - File Transfer
 - Step Counter
 - Password Manager
