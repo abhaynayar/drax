@@ -9,7 +9,7 @@ public class MyListener extends NotificationListenerService {
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn){
-        Intent intent = new  Intent("com.abhaynayar.notificationlistener.xyz");
+        Intent intent = new  Intent("com.drax.nls");
 
         String all = "";
         all += sbn.getPackageName() + ", ";

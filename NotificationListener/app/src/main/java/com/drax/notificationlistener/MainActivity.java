@@ -1,61 +1,77 @@
 package com.drax.notificationlistener;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import android.Manifest;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import java.util.Calendar;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ScrollView;
 
-// TODO: Battery optimization -> jump to package name.
-// TODO: Add timestamp to logs.
 // TODO: Save logs to persistent storage.
 // TODO: Use table instead of csv.
+// TODO: Add timestamp to logs.
+// TODO: Display most recent log at the top.
 
 public class MainActivity extends AppCompatActivity {
+    private static final String LOG_TAG = "NLS";
 
-    static String aggregation = "";
+    void getNotificationAccess() {
+        // Ask for notification access permission.
+        NotificationManager nm = (NotificationManager) getApplicationContext()
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        if (!nm.isNotificationPolicyAccessGranted()) {
+            Log.i(LOG_TAG, "[-] Notification access denied.");
+            startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+        } else {
+            Log.i(LOG_TAG, "[+] Notification access granted.");
+        }
+    }
+
+    void getBatteryAccess() {
+        // Ask for disabling battery optimization.
+        Intent intent = new Intent();
+        String packageName = this.getPackageName();
+        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            Log.e(LOG_TAG, "[-] Not ignoring battery optimization.");
+            startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+        } else {
+            Log.i(LOG_TAG, "[+] Ignoring battery optimization.");
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*
-        // Launch battery optimization settings:
-        Button btnOptimization = (Button) findViewById(R.id.btnOptimization);
-        btnOptimization.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                startActivity(intent);
-            }
-        });
-
-        // Launch notification access settings:
-        Button btnPermission = (Button) findViewById(R.id.btnPermission);
-        btnPermission.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
-            }
-        });
-         */
+        // Get some essential permissions:
+        getBatteryAccess();
+        getNotificationAccess();
 
         // Listen for broadcasts by the notification listener.
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("com.abhaynayar.notificationlistener.xyz");
+        intentFilter.addAction("com.drax.nls");
         registerReceiver(new SomeBroadcastReceiver(), intentFilter);
 
-        // When you add more notifications, scroll to the bottom.
-        ScrollView sv = (ScrollView) findViewById(R.id.SCROLLER_ID);
-        sv.fullScroll(View.FOCUS_DOWN);
-
         // Share notifications log:
-        Button btnSave = (Button) findViewById(R.id.btnSave);
+        Button btnSave = (Button) findViewById(R.id.btnShare);
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -69,41 +85,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        /*
-        // Battery optimization check:
-        Button btnOptimization = (Button) findViewById(R.id.btnOptimization);
-        TextView tvOptimization = (TextView) findViewById(R.id.tvOptimization);
-        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-        if (!pm.isIgnoringBatteryOptimizations(getPackageName())) {
-            tvOptimization.setText("Not ignoring battery optimization.");
-            btnOptimization.setEnabled(true);
-        } else {
-            tvOptimization.setText("[OK] Ignoring battery optimization.");
-            btnOptimization.setEnabled(false);
-        }
-
-        // Notification access check:
-        Button btnPermission = (Button) findViewById(R.id.btnPermission);
-        TextView tvPermission = (TextView) findViewById(R.id.tvPermission);
-        NotificationManager nm = (NotificationManager) getApplicationContext()
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        if(!nm.isNotificationPolicyAccessGranted()) {
-            tvPermission.setText("Notification access not granted.");
-            btnPermission.setEnabled(true);
-        } else {
-            tvPermission.setText("[OK] Notification access granted.");
-            btnPermission.setEnabled(false);
-        }
-         */
-    }
-
+    static String aggregation = "";
     public class SomeBroadcastReceiver extends BroadcastReceiver {
         @Override
+
         public void onReceive(Context context, Intent intent) {
+
             // Concatenate notification contents from the broadcast.
             String nc = intent.getExtras().getString("notificationContent");
             aggregation += nc + "\n";
