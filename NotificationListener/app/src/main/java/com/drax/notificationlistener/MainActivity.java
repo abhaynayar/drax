@@ -32,15 +32,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ScrollView;
 
-// TODO: Prevent SQL injection.
-// TODO: Better representation for timestamp.
 // TODO: Clear logs button, Export logs button.
 // TODO: Self-notification to test if notifications are still being logged.
+// TODO: Prevent SQL injection. (may be able to crash application)
+// TODO: Better representation for timestamp.
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "NLS";
     public static SQLiteDatabase db;
-    static TextView tvLog;
 
     RecyclerView rvLogs;
     RecyclerView.LayoutManager layoutManager;
@@ -70,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
         rvLogs.setLayoutManager(layoutManager);
         logsAdapter = new LogsAdapter(this, logsList, rvLogs);
         rvLogs.setAdapter(logsAdapter);
-
     }
 
     public List<Logs> getAllLogs() {
@@ -116,5 +114,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Log.i(TAG, "[+] Ignoring battery optimization.");
         }
+    }
+
+    public void clearDatabase(View view) {
+        int size = logsList.size();
+        logsList.clear();
+        logsAdapter.notifyItemRangeRemoved(0, size);
+        db.execSQL("DELETE FROM log;");
     }
 }

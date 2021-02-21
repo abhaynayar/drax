@@ -10,14 +10,16 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvLogs"
+        android:layout_weight="1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
-<!--
+
     <Button
         android:id="@+id/btnShare"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="SHARE" />
-        -->
+        android:onClick="clearDatabase"
+        android:text="CLEAR" />
+
 </LinearLayout>
