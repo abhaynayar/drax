@@ -18,11 +18,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -31,11 +35,15 @@ import java.util.List;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
-// TODO: Clear logs button, Export logs button.
+import au.com.bytecode.opencsv.CSVWriter;
+
+// TODO: Export logs button beyond external storage.
 // TODO: Self-notification to test if notifications are still being logged.
 // TODO: Prevent SQL injection. (may be able to crash application)
 // TODO: Better representation for timestamp.
+// TODO: Restore from CSV file.
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "NLS";
@@ -55,11 +63,11 @@ public class MainActivity extends AppCompatActivity {
         // Getting some essential permissions:
         getBatteryAccess();
         getNotificationAccess();
+        getStorageAccess();
 
         // Create DB:
         db = openOrCreateDatabase("nls", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS log(timeStamp INTEGER, packageName TEXT, title TEXT, text TEXT);");
-        db.execSQL("DELETE FROM log");
 
         // Populate the recycler view:
         logsList = getAllLogs();
@@ -71,18 +79,37 @@ public class MainActivity extends AppCompatActivity {
         rvLogs.setAdapter(logsAdapter);
     }
 
+    private void getStorageAccess() {
+        // Storage Permissions
+        final int REQUEST_EXTERNAL_STORAGE = 1;
+        String[] PERMISSIONS_STORAGE = {
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            Log.i(TAG, "[-] Storage access not granted.");
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
     public List<Logs> getAllLogs() {
 
         List<Logs> logsList = new ArrayList<>();
         Cursor cursor = db.rawQuery("SELECT * FROM log ORDER BY timeStamp DESC;", null);
-        if (cursor.moveToFirst() ){
+        if (cursor.moveToFirst()) {
             String[] columnNames = cursor.getColumnNames();
             do {
                 Logs log = new Logs(
-                    cursor.getString(cursor.getColumnIndex("timeStamp")),
-                    cursor.getString(cursor.getColumnIndex("packageName")),
-                    cursor.getString(cursor.getColumnIndex("title")),
-                    cursor.getString(cursor.getColumnIndex("text"))
+                        cursor.getString(cursor.getColumnIndex("timeStamp")),
+                        cursor.getString(cursor.getColumnIndex("packageName")),
+                        cursor.getString(cursor.getColumnIndex("title")),
+                        cursor.getString(cursor.getColumnIndex("text"))
                 );
                 logsList.add(log);
 
@@ -122,4 +149,62 @@ public class MainActivity extends AppCompatActivity {
         logsAdapter.notifyItemRangeRemoved(0, size);
         db.execSQL("DELETE FROM log;");
     }
+
+    public void exportCsv(View view) {
+        Cursor c = null;
+
+        try {
+            c = db.rawQuery("select * from log", null);
+            int rowcount = 0;
+            int colcount = 0;
+            File sdCardDir = Environment.getExternalStorageDirectory();
+            String filename = "MyBackUp.csv";
+
+            File saveFile = new File(sdCardDir, filename);
+            FileWriter fw = new FileWriter(saveFile);
+
+            BufferedWriter bw = new BufferedWriter(fw);
+            rowcount = c.getCount();
+            colcount = c.getColumnCount();
+            if (rowcount > 0) {
+                c.moveToFirst();
+
+                for (int i = 0; i < colcount; i++) {
+                    if (i != colcount - 1) {
+
+                        bw.write(c.getColumnName(i) + ",");
+
+                    } else {
+
+                        bw.write(c.getColumnName(i));
+
+                    }
+                }
+                bw.newLine();
+
+                for (int i = 0; i < rowcount; i++) {
+                    c.moveToPosition(i);
+
+                    for (int j = 0; j < colcount; j++) {
+                        if (j != colcount - 1)
+                            bw.write(c.getString(j) + ",");
+                        else
+                            bw.write(c.getString(j));
+                    }
+                    bw.newLine();
+                }
+                bw.flush();
+                Toast.makeText(this, "Exported Successfully.", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception ex) {
+            if (db.isOpen()) {
+                Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
+            }
+
+        } finally {
+
+        }
+
+    }
 }
+
