@@ -27,9 +27,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ScrollView;
 
-// TODO: Remove duplicate logs.
-// TODO: Save logs to persistent storage.
 // TODO: Display most recent log at the top.
+// TODO: Save logs to persistent storage.
 // TODO: Self-notification to test if notifications are still being logged.
 
 public class MainActivity extends AppCompatActivity {
