@@ -3,6 +3,8 @@ package com.drax.notificationlistener;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.NotificationManager;
@@ -20,15 +22,19 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ScrollView;
 
-// TODO: Display most recent log at the top.
-// TODO: Save logs to persistent storage.
+// TODO: Prevent SQL injection.
+// TODO: Better representation for timestamp.
+// TODO: Clear logs button, Export logs button.
 // TODO: Self-notification to test if notifications are still being logged.
 
 public class MainActivity extends AppCompatActivity {
@@ -36,15 +42,16 @@ public class MainActivity extends AppCompatActivity {
     public static SQLiteDatabase db;
     static TextView tvLog;
 
-    public static void asdf(String asdf) {
-        tvLog.setText(asdf);
-    }
+    RecyclerView rvLogs;
+    RecyclerView.LayoutManager layoutManager;
+
+    public static LogsAdapter logsAdapter;
+    public static List<Logs> logsList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        tvLog = (TextView) findViewById(R.id.tvLog);
 
         // Getting some essential permissions:
         getBatteryAccess();
@@ -52,18 +59,38 @@ public class MainActivity extends AppCompatActivity {
 
         // Create DB:
         db = openOrCreateDatabase("nls", MODE_PRIVATE, null);
-        db.execSQL("CREATE TABLE IF NOT EXISTS log(ts TEXT, package TEXT, title TEXT, text TEXT);");
-        db.execSQL("DELETE FROM log;");
+        db.execSQL("CREATE TABLE IF NOT EXISTS log(timeStamp INTEGER, packageName TEXT, title TEXT, text TEXT);");
+        db.execSQL("DELETE FROM log");
 
-        // Share logs:
-        Button btnSave = (Button) findViewById(R.id.btnShare);
-        btnSave.setOnClickListener(v -> {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, tvLog.getText());
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Notification log " + Calendar.getInstance().getTime());
-            startActivity(Intent.createChooser(shareIntent, "Share..."));
-        });
+        // Populate the recycler view:
+        logsList = getAllLogs();
+        rvLogs = findViewById(R.id.rvLogs);
+        rvLogs.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        rvLogs.setLayoutManager(layoutManager);
+        logsAdapter = new LogsAdapter(this, logsList, rvLogs);
+        rvLogs.setAdapter(logsAdapter);
+
+    }
+
+    public List<Logs> getAllLogs() {
+
+        List<Logs> logsList = new ArrayList<>();
+        Cursor cursor = db.rawQuery("SELECT * FROM log ORDER BY timeStamp DESC;", null);
+        if (cursor.moveToFirst() ){
+            String[] columnNames = cursor.getColumnNames();
+            do {
+                Logs log = new Logs(
+                    cursor.getString(cursor.getColumnIndex("timeStamp")),
+                    cursor.getString(cursor.getColumnIndex("packageName")),
+                    cursor.getString(cursor.getColumnIndex("title")),
+                    cursor.getString(cursor.getColumnIndex("text"))
+                );
+                logsList.add(log);
+
+            } while (cursor.moveToNext());
+        }
+        return logsList;
     }
 
     void getNotificationAccess() {

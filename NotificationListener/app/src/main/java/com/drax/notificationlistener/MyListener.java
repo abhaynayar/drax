@@ -7,19 +7,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import static com.drax.notificationlistener.MainActivity.TAG;
 import static com.drax.notificationlistener.MainActivity.db;
+import static com.drax.notificationlistener.MainActivity.logsList;
 
 public class MyListener extends NotificationListenerService {
 
     @Override
-    public void onNotificationPosted(StatusBarNotification sbn){
+    public void onNotificationPosted(StatusBarNotification sbn) {
+        Log.i(TAG, "Notification posted.");
         String title="", text="";
 
-        Date currentTime = Calendar.getInstance().getTime();
+        String currentTime = String.valueOf(System.currentTimeMillis());
         Bundle extras = sbn.getNotification().extras;
 
         if(extras.getString("android.title") != null){
@@ -30,24 +34,11 @@ public class MyListener extends NotificationListenerService {
             text += extras.getCharSequence("android.text").toString();
         }
 
-        db.execSQL("INSERT INTO log VALUES('" + currentTime + "', '" + sbn.getPackageName() + "', '"
-                                                           + title + "', '" + text + "');");
+        db.execSQL("INSERT INTO log VALUES(" + currentTime + ", '" + sbn.getPackageName() + "', '" + title + "', '" + text + "');");
+        Logs log = new Logs(currentTime.toString(), sbn.getPackageName(), title, text);
+        Log.d(TAG, log.toString());
 
-        String tableString="";
-        Cursor allRows  = db.rawQuery("SELECT * FROM log;", null);
-        if (allRows.moveToFirst() ){
-            String[] columnNames = allRows.getColumnNames();
-            do {
-                for (String name: columnNames) {
-                    tableString += String.format("%s: %s\n", name,
-                            allRows.getString(allRows.getColumnIndex(name)));
-                }
-                tableString += "\n";
-
-            } while (allRows.moveToNext());
-        }
-
-        Log.i(TAG, tableString);
-        MainActivity.asdf(tableString);
+        MainActivity.logsList.add(0, log);
+        MainActivity.logsAdapter.notifyItemInserted(0);
     }
 }
