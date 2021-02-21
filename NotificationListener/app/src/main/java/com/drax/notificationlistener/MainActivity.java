@@ -1,23 +1,21 @@
-package com.abhaynayar.notificationlistener;
+package com.drax.notificationlistener;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.BroadcastReceiver;
-import android.app.NotificationManager;
 import android.content.IntentFilter;
-import android.provider.Settings;
-import android.os.PowerManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import java.util.Calendar;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ScrollView;
 
-// TODO: Battery optimization jump to package name.
-// TODO: Add date and time to notification logs.
+// TODO: Battery optimization -> jump to package name.
+// TODO: Add timestamp to logs.
+// TODO: Save logs to persistent storage.
+// TODO: Use table instead of csv.
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,8 +25,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.i("NLS", "onCreate");
 
+        /*
         // Launch battery optimization settings:
         Button btnOptimization = (Button) findViewById(R.id.btnOptimization);
         btnOptimization.setOnClickListener(new View.OnClickListener() {
@@ -45,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
             }
         });
+         */
 
         // Listen for broadcasts by the notification listener.
         IntentFilter intentFilter = new IntentFilter();
@@ -74,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        /*
         // Battery optimization check:
         Button btnOptimization = (Button) findViewById(R.id.btnOptimization);
         TextView tvOptimization = (TextView) findViewById(R.id.tvOptimization);
@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
             tvPermission.setText("[OK] Notification access granted.");
             btnPermission.setEnabled(false);
         }
+         */
     }
 
     public class SomeBroadcastReceiver extends BroadcastReceiver {
@@ -106,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
             // Concatenate notification contents from the broadcast.
             String nc = intent.getExtras().getString("notificationContent");
             aggregation += nc + "\n";
-            Log.i("NLS", nc);
 
             // Update TextView with the concatenated result.
             TextView tvNotifications = (TextView) findViewById(R.id.tvNotifications);

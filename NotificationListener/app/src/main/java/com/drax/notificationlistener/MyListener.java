@@ -1,11 +1,9 @@
-package com.abhaynayar.notificationlistener;
+package com.drax.notificationlistener;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
 
 public class MyListener extends NotificationListenerService {
 
@@ -27,7 +25,5 @@ public class MyListener extends NotificationListenerService {
 
         intent.putExtra("notificationContent", all);
         sendBroadcast(intent);
-
-        Log.i("NLS", "onNotificationPosted");
     }
 }
