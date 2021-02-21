@@ -24,7 +24,7 @@
             android:scrollbars="vertical">
 
             <TextView
-                android:id="@+id/tvNotifications"
+                android:id="@+id/tvLog"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:background="@drawable/back"/>
