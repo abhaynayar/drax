@@ -15,6 +15,7 @@ import java.util.List;
 import static com.drax.notificationlistener.MainActivity.TAG;
 import static com.drax.notificationlistener.MainActivity.db;
 import static com.drax.notificationlistener.MainActivity.logsList;
+import static com.drax.notificationlistener.MainActivity.rvLogs;
 
 public class MyListener extends NotificationListenerService {
 
@@ -40,5 +41,6 @@ public class MyListener extends NotificationListenerService {
 
         MainActivity.logsList.add(0, log);
         MainActivity.logsAdapter.notifyItemInserted(0);
+        MainActivity.layoutManager.smoothScrollToPosition(MainActivity.rvLogs, null, 0);
     }
 }

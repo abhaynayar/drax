@@ -44,13 +44,14 @@ import au.com.bytecode.opencsv.CSVWriter;
 // TODO: Prevent SQL injection. (may be able to crash application)
 // TODO: Better representation for timestamp.
 // TODO: Restore from CSV file.
+// TODO: Dialog boxes for permissions.
 
 public class MainActivity extends AppCompatActivity {
+
     public static final String TAG = "NLS";
     public static SQLiteDatabase db;
-
-    RecyclerView rvLogs;
-    RecyclerView.LayoutManager layoutManager;
+    public static RecyclerView.LayoutManager layoutManager;
+    public static RecyclerView rvLogs;
 
     public static LogsAdapter logsAdapter;
     public static List<Logs> logsList = new ArrayList<>();
