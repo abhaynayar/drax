@@ -9,6 +9,8 @@
     android:orientation="vertical">
 
     <androidx.recyclerview.widget.RecyclerView
+        android:background="@drawable/back"
+        android:layout_margin="10dp"
         android:id="@+id/rvLogs"
         android:layout_weight="1"
         android:layout_width="fill_parent"
