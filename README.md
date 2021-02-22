@@ -9,6 +9,7 @@ Small and handy Android applications.
 
 ### Todo
 
+- Notes
 - File Share
 - World Clock
 - Weather App

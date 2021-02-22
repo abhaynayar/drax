@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
@@ -39,12 +40,11 @@ import android.widget.Toast;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
-// TODO: Export logs button beyond external storage.
-// TODO: Self-notification to test if notifications are still being logged.
-// TODO: Prevent SQL injection. (may be able to crash application)
+// TODO: Share exported csv.
 // TODO: Better representation for timestamp.
-// TODO: Restore from CSV file.
-// TODO: Dialog boxes for permissions.
+// TODO: Restore backup notification logs from an older CSV file.
+// TODO: Prevent SQL injection. (may be able to crash application)
+// TODO: Self-notification to test if notifications are still being logged.
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,8 +63,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Getting some essential permissions:
         getBatteryAccess();
-        getNotificationAccess();
         getStorageAccess();
+        getNotificationAccess();
 
         // Create DB:
         db = openOrCreateDatabase("nls", MODE_PRIVATE, null);
@@ -78,25 +78,6 @@ public class MainActivity extends AppCompatActivity {
         rvLogs.setLayoutManager(layoutManager);
         logsAdapter = new LogsAdapter(this, logsList, rvLogs);
         rvLogs.setAdapter(logsAdapter);
-    }
-
-    private void getStorageAccess() {
-        // Storage Permissions
-        final int REQUEST_EXTERNAL_STORAGE = 1;
-        String[] PERMISSIONS_STORAGE = {
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-        };
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            Log.i(TAG, "[-] Storage access not granted.");
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
     }
 
     public List<Logs> getAllLogs() {
@@ -119,38 +100,13 @@ public class MainActivity extends AppCompatActivity {
         return logsList;
     }
 
-    void getNotificationAccess() {
-        // Ask for notification access permission.
-        NotificationManager nm = (NotificationManager) getApplicationContext()
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        if (!nm.isNotificationPolicyAccessGranted()) {
-            Log.i(TAG, "[-] Notification access denied.");
-            startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
-        } else {
-            Log.i(TAG, "[+] Notification access granted.");
-        }
-    }
-
-    void getBatteryAccess() {
-        // Ask for disabling battery optimization.
-        Intent intent = new Intent();
-        String packageName = this.getPackageName();
-        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
-        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-            Log.e(TAG, "[-] Not ignoring battery optimization.");
-            startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
-        } else {
-            Log.i(TAG, "[+] Ignoring battery optimization.");
-        }
-    }
-
     public void clearDatabase(View view) {
         int size = logsList.size();
         logsList.clear();
         logsAdapter.notifyItemRangeRemoved(0, size);
         db.execSQL("DELETE FROM log;");
     }
-
+    
     public void exportCsv(View view) {
         Cursor c = null;
 
@@ -159,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             int rowcount = 0;
             int colcount = 0;
             File sdCardDir = Environment.getExternalStorageDirectory();
-            String filename = "MyBackUp.csv";
+            String filename = "notifications.csv";
 
             File saveFile = new File(sdCardDir, filename);
             FileWriter fw = new FileWriter(saveFile);
@@ -170,42 +126,76 @@ public class MainActivity extends AppCompatActivity {
             if (rowcount > 0) {
                 c.moveToFirst();
 
-                for (int i = 0; i < colcount; i++) {
-                    if (i != colcount - 1) {
-
+                for (int i=0; i<colcount; ++i) {
+                    if (i != colcount-1)
                         bw.write(c.getColumnName(i) + ",");
-
-                    } else {
-
-                        bw.write(c.getColumnName(i));
-
-                    }
+                    else bw.write(c.getColumnName(i));
                 }
+
                 bw.newLine();
 
-                for (int i = 0; i < rowcount; i++) {
+                for (int i=0; i<rowcount; ++i) {
                     c.moveToPosition(i);
-
-                    for (int j = 0; j < colcount; j++) {
-                        if (j != colcount - 1)
+                    for (int j=0; j<colcount; ++j) {
+                        if (j != colcount-1)
                             bw.write(c.getString(j) + ",");
-                        else
-                            bw.write(c.getString(j));
+                        else bw.write(c.getString(j));
                     }
                     bw.newLine();
                 }
+
                 bw.flush();
-                Toast.makeText(this, "Exported Successfully.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Exported successfully.", Toast.LENGTH_LONG).show();
             }
         } catch (Exception ex) {
             if (db.isOpen()) {
                 Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
             }
-
-        } finally {
-
         }
+    }
 
+    // ------------------------------------ PERMISSIONS: --------------------------------------- //
+
+    private void getStorageAccess() {
+        final int REQUEST_EXTERNAL_STORAGE = 1;
+        String[] PERMISSIONS_STORAGE = {
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+    void getBatteryAccess() {
+        String packageName = this.getPackageName();
+        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            Log.e(TAG, "[-] Battery access denied.");
+
+            CustomDialog cd = new CustomDialog(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS), "Battery access");
+            cd.show(getSupportFragmentManager(), "BatteryAccessDialog");
+        } else {
+            Log.i(TAG, "[+] Battery access granted.");
+        }
+    }
+
+    void getNotificationAccess() {
+
+        NotificationManager nm = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (!nm.isNotificationPolicyAccessGranted()) {
+            Log.i(TAG, "[-] Notification access denied.");
+
+            CustomDialog cd = new CustomDialog(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS), "Notification access");
+            cd.show(getSupportFragmentManager(), "NotificationAccessDialog");
+        } else {
+            Log.i(TAG, "[+] Notification access granted.");
+        }
     }
 }
 

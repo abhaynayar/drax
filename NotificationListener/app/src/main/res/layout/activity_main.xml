@@ -28,8 +28,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:onClick="clearDatabase"
             android:layout_margin="5dp"
+            android:onClick="clearDatabase"
             android:text="CLEAR" />
         <Button
             android:id="@+id/btnCsv"
