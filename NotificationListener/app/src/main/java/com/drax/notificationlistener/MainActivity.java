@@ -38,14 +38,6 @@ import android.widget.TextView;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
-import au.com.bytecode.opencsv.CSVWriter;
-
-// TODO: Share exported csv.
-// TODO: Better representation for timestamp.
-// TODO: Restore backup notification logs from an older CSV file.
-// TODO: Prevent SQL injection. (may be able to crash application)
-// TODO: Self-notification to test if notifications are still being logged.
-
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "NLS";

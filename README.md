@@ -2,13 +2,13 @@
 
 Small and handy Android applications.
 
-### Apps
+### Current
 
-- Notification Listener
-- Step Counter
+- [Notification Listener](NotificationListener)
+- [Step Counter](StepCounter)
 
-### Todo
+### Upcoming
 
+- [Planner](Planner)
 - Hex Editor
 - Content Transfer
-

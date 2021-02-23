@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+// TODO: Change to accelerometer based.
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     TextView stepView;
